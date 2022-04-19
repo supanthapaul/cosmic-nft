@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { ethers } from 'ethers';
 import CosmicNFT from './utils/CosmicNFT.json';
 import Spinner from './components/Spinner'
+import NftPreview from './components/NftPreview';
 
 // Constants
 const TWITTER_HANDLE = 'supanthapaul';
@@ -16,6 +17,10 @@ const TOTAL_MINT_COUNT = 50;
 const App = () => {
 
 	const [currentAccount, setCurrentAccount] = useState("");
+	// client-side fix for https://github.com/ethers-io/ethers.js/issues/2310
+	const [nftMintedinCurrentSession, setNftMintedinCurrentSession] = useState(false);
+	const [nftMetadata, setNftMetadata] = useState(null);
+	const [nftLink, setNftLink] = useState(null);
 	const [mining, setMining] = useState(false);
 
 
@@ -37,8 +42,8 @@ const App = () => {
 			const account = accounts[0];
 			console.log("Found an authorized account:", account);
 			setCurrentAccount(account);
-			// setup event listener for minfting completion
-			setupEventListener();
+			// setup event listener for minting completion
+			//setupEventListener();
 		} else {
 			console.log("No authorized account found");
 		}
@@ -58,37 +63,10 @@ const App = () => {
 
 			console.log("Connected", accounts[0]);
 			setCurrentAccount(accounts[0]);
-			// setup event listener for minfting completion
-			setupEventListener();
+			// setup event listener for minting completion
+			//setupEventListener();
 		} catch (error) {
 			console.log(error);
-		}
-	}
-
-	const setupEventListener = async () => {
-		// Most of this looks the same as our function askContractToMintNft
-		try {
-			const { ethereum } = window;
-
-			if (ethereum) {
-				// Same stuff again
-				const provider = new ethers.providers.Web3Provider(ethereum);
-				const signer = provider.getSigner();
-				const connectedContract = new ethers.Contract(CONTRACT_ADDRESS, CosmicNFT.abi, signer);
-
-				connectedContract.on("NewCosmicNFTMinted", (from, tokenId, metadata) => {
-					console.log(from, tokenId.toNumber());
-					console.log(metadata);
-					alert(`Hey there! We've minted your NFT and sent it to your wallet. It may be blank right now. It can take a max of 10 min to show up on OpenSea. Here's the link: https://testnets.opensea.io/assets/${CONTRACT_ADDRESS}/${tokenId.toNumber()}`)
-				});
-
-				console.log("Setup event listener!")
-
-			} else {
-				console.log("Ethereum object doesn't exist!");
-			}
-		} catch (error) {
-			console.log(error)
 		}
 	}
 
@@ -98,6 +76,9 @@ const App = () => {
 			const { ethereum } = window;
 
 			if (ethereum) {
+				// we are tring to mint a nft this session
+				setNftMintedinCurrentSession(true);
+
 				const provider = new ethers.providers.Web3Provider(ethereum);
 				const signer = provider.getSigner();
 				const connectedContract = new ethers.Contract(CONTRACT_ADDRESS, CosmicNFT.abi, signer);
@@ -110,6 +91,7 @@ const App = () => {
 
 				console.log(`Mined!`);
 				setMining(false);
+				
 			} else {
 				console.log("Ethereum object doesn't exist!");
 			}
@@ -127,7 +109,7 @@ const App = () => {
 
 	useEffect(() => {
 		checkIfWalletIsConnected();
-
+		//setupEventListener();
 		// let chainId = await ethereum.request({ method: 'eth_chainId' });
 		// console.log("Connected to chain " + chainId);
 
@@ -136,6 +118,43 @@ const App = () => {
 		// if (chainId !== rinkebyChainId) {
 		// 	alert("You are not connected to the Rinkeby Test Network!");
 		// }
+	}, [])
+
+	useEffect(() => {
+		let connectedContract;
+		const OnNewCosmicNFTMinted = (from, tokenId, metadata) => {
+			//if(!nftMintedinCurrentSession) return;
+			console.log(from, tokenId.toNumber());
+			console.log(metadata);
+			setNftMetadata(metadata);
+			setNftLink(`https://testnets.opensea.io/assets/${CONTRACT_ADDRESS}/${tokenId.toNumber()}`);
+			//alert(`Hey there! We've minted your NFT and sent it to your wallet. It may be blank right now. It can take a max of 10 min to show up on OpenSea. Here's the link: https://testnets.opensea.io/assets/${CONTRACT_ADDRESS}/${tokenId.toNumber()}`)
+		};
+
+		try {
+			const { ethereum } = window;
+
+			if (ethereum) {
+				const provider = new ethers.providers.Web3Provider(ethereum);
+				const signer = provider.getSigner();
+				connectedContract = new ethers.Contract(CONTRACT_ADDRESS, CosmicNFT.abi, signer);
+
+				connectedContract.on("NewCosmicNFTMinted", OnNewCosmicNFTMinted);
+
+				console.log("Setup event listener!")
+
+			} else {
+				console.log("Ethereum object doesn't exist!");
+			}
+		} catch (error) {
+			console.log(error)
+		}
+
+		return () => {
+			if(connectedContract) {
+				connectedContract.off("NewCosmicNFTMinted", OnNewCosmicNFTMinted);
+			}
+		}
 	}, [])
 
 	return (
@@ -153,6 +172,7 @@ const App = () => {
 							
 						</button>}
 				</div>
+				{nftMintedinCurrentSession && nftMetadata &&  <NftPreview nftMetadata={nftMetadata} nftLink={nftLink}/>}
 				<div className="footer-container">
 					<img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
 					<a

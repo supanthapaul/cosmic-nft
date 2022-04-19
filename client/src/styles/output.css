@@ -411,14 +411,45 @@ Ensure the default browser behavior of the `hidden` attribute.
   --tw-backdrop-saturate:  ;
   --tw-backdrop-sepia:  ;
 }
+.col-start-1 {
+  grid-column-start: 1;
+}
+.col-start-2 {
+  grid-column-start: 2;
+}
+.col-end-2 {
+  grid-column-end: 2;
+}
+.col-end-4 {
+  grid-column-end: 4;
+}
+.my-8 {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
 .mr-2 {
   margin-right: 0.5rem;
+}
+.grid {
+  display: grid;
 }
 .h-8 {
   height: 2rem;
 }
+.max-h-full {
+  max-height: 100%;
+}
+.w-auto {
+  width: auto;
+}
 .w-8 {
   width: 2rem;
+}
+.max-w-full {
+  max-width: 100%;
 }
 @keyframes spin {
 
@@ -429,8 +460,24 @@ Ensure the default browser behavior of the `hidden` attribute.
 .animate-spin {
   animation: spin 1s linear infinite;
 }
+.grid-cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.items-center {
+  align-items: center;
+}
+.gap-4 {
+  gap: 1rem;
+}
 .fill-blue-600 {
   fill: #2563eb;
+}
+.font-bold {
+  font-weight: 700;
+}
+.text-white {
+  --tw-text-opacity: 1;
+  color: rgb(255 255 255 / var(--tw-text-opacity));
 }
 .text-gray-200 {
   --tw-text-opacity: 1;
@@ -438,8 +485,8 @@ Ensure the default browser behavior of the `hidden` attribute.
 }
 @media (prefers-color-scheme: dark) {
 
-  .dark\:text-gray-600 {
+  .dark\:text-white {
     --tw-text-opacity: 1;
-    color: rgb(75 85 99 / var(--tw-text-opacity));
+    color: rgb(255 255 255 / var(--tw-text-opacity));
   }
 }
